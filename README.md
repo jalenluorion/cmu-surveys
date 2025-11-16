@@ -78,32 +78,93 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
   ```env
   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
-
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
-
-5. You can now run the Next.js local development server:
-
    ```bash
    npm run dev
    ```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+5. **Open [http://localhost:3000](http://localhost:3000)**
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+### Authentication Setup
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+The platform uses Supabase Auth. Configure your authentication providers in the Supabase dashboard under Authentication > Providers.
 
-## Feedback and issues
+## Usage Flow
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+1. **Sign Up/Login**: Users authenticate via Supabase Auth
+2. **Complete Surveys**: Browse and complete surveys to earn points
+3. **Track Progress**: View progress toward 10-survey posting requirement
+4. **Post Survey**: Once eligible, post surveys with external links
+5. **Leaderboard**: Compete on weekly and all-time leaderboards
+6. **Earn Badges**: Unlock recognition badges for participation
 
-## More Supabase examples
+## Key Components
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+### Survey Feed (`/surveys`)
+- Lists active surveys ranked by response count
+- Shows completion status and prevents duplicate completions
+- Tracks user progress toward posting privileges
+
+### Survey Creation (`/surveys/create`)
+- Enforces 10-survey completion requirement
+- Validates survey data and external URLs
+- Integrates with existing response counts
+
+### Leaderboard (`/leaderboard`)
+- Weekly and all-time rankings
+- Badge showcase and user achievements
+- Real-time ranking updates
+
+### Profile Dashboard (`/profile`)
+- Personal stats and progress tracking
+- Survey completion history
+- Badge collection display
+
+## Database Policies
+
+Row Level Security (RLS) is enabled with policies ensuring:
+- Users can only edit their own profiles
+- Survey posting requires 10+ completions
+- Completion tracking prevents duplicates
+- Public access to leaderboards and surveys
+
+## Cleanup
+
+When the platform is no longer needed, easily remove all data:
+
+```sql
+-- Drop all tables with SURVEY_ prefix
+DROP TABLE IF EXISTS SURVEY_weekly_leaderboard CASCADE;
+DROP TABLE IF EXISTS SURVEY_user_badges CASCADE;
+DROP TABLE IF EXISTS SURVEY_badges CASCADE;
+DROP TABLE IF EXISTS SURVEY_completions CASCADE;
+DROP TABLE IF EXISTS SURVEY_surveys CASCADE;
+DROP TABLE IF EXISTS SURVEY_users CASCADE;
+```
+
+## Development
+
+### Project Structure
+```
+├── app/                    # Next.js app router pages
+│   ├── surveys/           # Survey feed and creation
+│   ├── leaderboard/       # Rankings and badges
+│   └── profile/           # User dashboard
+├── components/            # Reusable UI components
+├── lib/                   # Utilities and database queries
+│   ├── contexts/          # React contexts
+│   ├── supabase/          # Database queries
+│   └── types.ts           # TypeScript definitions
+└── supabase/
+    └── migrations/        # Database schema
+```
+
+### Adding Features
+
+1. Update database schema in migrations
+2. Add TypeScript types in `lib/types.ts`
+3. Create database queries in `lib/supabase/queries.ts`
+4. Build UI components and pages
+
+## Contributing
+
+This platform was built specifically for CMU's survey distribution needs. Feel free to adapt it for other educational institutions or survey exchange use cases.
