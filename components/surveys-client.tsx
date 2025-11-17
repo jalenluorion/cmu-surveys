@@ -279,6 +279,7 @@ export default function SurveysClient({
       {activeModalSurvey && (() => {
         const modalSurvey = surveys.find(s => s.id === activeModalSurvey);
         const isOwnSurvey = modalSurvey?.user_id === user?.id;
+        const isCompleted = completedSurveys.has(activeModalSurvey);
         
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -307,7 +308,15 @@ export default function SurveysClient({
                 </div>
               )}
               
-              {timeRemaining > 0 && !isOwnSurvey && (
+              {isCompleted && !isOwnSurvey && (
+                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
+                  <p className="text-sm text-green-800 dark:text-green-200">
+                    You have already completed this survey.
+                  </p>
+                </div>
+              )}
+              
+              {timeRemaining > 0 && !isOwnSurvey && !isCompleted && (
                 <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
                   <p className="text-sm text-yellow-800 dark:text-yellow-200">
                     Please wait {timeRemaining} seconds before marking as complete.
@@ -328,7 +337,7 @@ export default function SurveysClient({
                     handleCompleteSurvey(activeModalSurvey);
                     closeModal();
                   }}
-                  disabled={timeRemaining > 0 || completingId === activeModalSurvey || isOwnSurvey}
+                  disabled={timeRemaining > 0 || completingId === activeModalSurvey || isOwnSurvey || isCompleted}
                   className="flex-1"
                 >
                   {completingId === activeModalSurvey ? 'Marking...' : 'Mark Complete'}
