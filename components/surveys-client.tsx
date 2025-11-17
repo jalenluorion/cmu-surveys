@@ -44,7 +44,7 @@ export default function SurveysClient({
 
   // Determine if user can post based on survey count or completion requirement
   const canPostDueToLowSurveyCount = totalSurveys < 11;
-  const canPostDueToCompletions = (surveyUser?.surveys_completed || 0) >= 10;
+  const canPostDueToCompletions = (surveyUser?.surveys_completed || 0) >= 6;
   const canPost = canPostDueToLowSurveyCount || canPostDueToCompletions;
 
   const handleTakeSurveyClick = (surveyId: string) => {
@@ -119,12 +119,12 @@ export default function SurveysClient({
             <div className="text-right">
               <div className="text-sm text-muted-foreground">Your Progress</div>
               <div className="text-2xl font-bold">
-                {surveyUser?.surveys_completed || 0}/10
+                {surveyUser?.surveys_completed || 0}/6
               </div>
               <div className="text-sm text-muted-foreground">
                 {canPost
                   ? 'Can post surveys!' 
-                  : `${10 - (surveyUser?.surveys_completed || 0)} more to unlock posting`
+                  : `${6 - (surveyUser?.surveys_completed || 0)} more to unlock posting`
                 }
               </div>
             </div>

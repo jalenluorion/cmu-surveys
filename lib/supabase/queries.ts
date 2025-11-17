@@ -76,8 +76,8 @@ export async function createSurvey(userId: string, surveyData: CreateSurveyData)
     // Allow posting without checking surveys_completed
   } else {
     // Check if user has completed enough surveys (normal requirement)
-    if (userProfile.surveys_completed < 10) {
-      throw new Error('You must complete 10 surveys before posting your own');
+    if (userProfile.surveys_completed < 6) {
+      throw new Error('You must complete 6 surveys before posting your own');
     }
   }
 

@@ -12,7 +12,7 @@ export default async function Home() {
               CMU FYW Survey Hub
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Complete 10 surveys in exchange for posting your own.
+              Complete 6 surveys in exchange for posting your own.
             </p>
           </div>
 
@@ -34,7 +34,7 @@ export default async function Home() {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
             <div className="bg-card rounded-lg p-6 shadow-sm border">
-              <div className="text-2xl font-bold text-primary">10</div>
+              <div className="text-2xl font-bold text-primary">6</div>
               <div className="text-sm text-muted-foreground">Surveys to unlock posting</div>
             </div>
             <div className="bg-card rounded-lg p-6 shadow-sm border">

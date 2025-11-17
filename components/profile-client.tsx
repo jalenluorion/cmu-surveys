@@ -24,8 +24,8 @@ export default function ProfileClient({
   completions, 
   badges 
 }: ProfileClientProps) {
-  const canPostSurveys = (surveyUser?.surveys_completed || 0) >= 10;
-  const progressPercentage = Math.min(((surveyUser?.surveys_completed || 0) / 10) * 100, 100);
+  const canPostSurveys = (surveyUser?.surveys_completed || 0) >= 6;
+  const progressPercentage = Math.min(((surveyUser?.surveys_completed || 0) / 6) * 100, 100);
 
   return (
     <div className="min-h-full bg-background">
@@ -91,14 +91,14 @@ export default function ProfileClient({
           <CardHeader>
             <CardTitle>Survey Posting Progress</CardTitle>
             <CardDescription>
-              Complete 10 surveys to unlock the ability to post your own surveys
+              Complete 6 surveys to unlock the ability to post your own surveys
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">
-                  {surveyUser?.surveys_completed || 0} / 10 surveys completed
+                  {surveyUser?.surveys_completed || 0} / 6 surveys completed
                 </span>
                 <span className="text-sm text-muted-foreground">
                   {Math.round(progressPercentage)}%
@@ -117,7 +117,7 @@ export default function ProfileClient({
                   </Badge>
                 ) : (
                   <Badge variant="outline">
-                    {10 - (surveyUser?.surveys_completed || 0)} more surveys needed
+                    {6 - (surveyUser?.surveys_completed || 0)} more surveys needed
                   </Badge>
                 )}
                 {canPostSurveys && (
@@ -239,7 +239,7 @@ export default function ProfileClient({
                     <p className="text-muted-foreground mb-4">
                       {canPostSurveys 
                         ? "You can now post surveys! Share your research with the community."
-                        : `Complete ${10 - (surveyUser?.surveys_completed || 0)} more surveys to unlock posting privileges.`
+                        : `Complete ${6 - (surveyUser?.surveys_completed || 0)} more surveys to unlock posting privileges.`
                       }
                     </p>
                     {canPostSurveys ? (
