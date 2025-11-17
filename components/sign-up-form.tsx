@@ -64,6 +64,7 @@ export function SignUpForm({
       });
       if (signInError) throw signInError;
       
+      // Wait for auth state to be properly updated
       const { data: { user } } = await supabase.auth.getUser();
         
       // Create or update user profile if authenticated
@@ -73,9 +74,10 @@ export function SignUpForm({
           user.email || '',
           user.user_metadata?.full_name
         );
-      }
         
-      router.push("/surveys");
+        // Use window.location.href for a hard redirect to ensure proper auth state
+        window.location.href = "/surveys";
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
