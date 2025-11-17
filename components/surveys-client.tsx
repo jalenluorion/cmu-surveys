@@ -6,7 +6,7 @@ import { completeSurvey, getPlatformStats } from '@/lib/supabase/queries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Clock, Users, CheckCircle } from 'lucide-react';
+import { ExternalLink, Clock, Users, CheckCircle, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -28,6 +28,8 @@ export default function SurveysClient({
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [totalSurveys, setTotalSurveys] = useState<number>(0);
   const [surveyClickTimes, setSurveyClickTimes] = useState<Map<string, number>>(new Map());
+  const [activeModalSurvey, setActiveModalSurvey] = useState<string | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
 
   // Check platform stats on component mount
   useEffect(() => {
@@ -42,13 +44,33 @@ export default function SurveysClient({
     fetchStats();
   }, []);
 
+  // Countdown timer effect for modal
+  useEffect(() => {
+    if (timeRemaining > 0) {
+      const timer = setTimeout(() => {
+        setTimeRemaining(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeRemaining]);
+
   // Determine if user can post based on survey count or completion requirement
   const canPostDueToLowSurveyCount = totalSurveys < 11;
   const canPostDueToCompletions = (surveyUser?.surveys_completed || 0) >= 6;
   const canPost = canPostDueToLowSurveyCount || canPostDueToCompletions;
 
-  const handleTakeSurveyClick = (surveyId: string) => {
+  const handleTakeSurveyClick = (surveyId: string, surveyUrl: string) => {
     setSurveyClickTimes(prev => new Map(prev.set(surveyId, Date.now())));
+    setActiveModalSurvey(surveyId);
+    setTimeRemaining(60); // 60 seconds
+    
+    // Open survey in new tab
+    window.open(surveyUrl, '_blank');
+  };
+
+  const closeModal = () => {
+    setActiveModalSurvey(null);
+    setTimeRemaining(0);
   };
 
   const handleCompleteSurvey = async (surveyId: string) => {
@@ -214,21 +236,13 @@ export default function SurveysClient({
                   
                   <CardFooter className="flex gap-2">
                     <Button
-                      asChild
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => handleTakeSurveyClick(survey.id)}
+                      onClick={() => handleTakeSurveyClick(survey.id, survey.external_url)}
                     >
-                      <a
-                        href={survey.external_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Take Survey
-                      </a>
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Take Survey
                     </Button>
                     
                     {!isCompleted && !isOwnSurvey && (
@@ -260,6 +274,70 @@ export default function SurveysClient({
           </div>
         )}
       </div>
+
+      {/* Survey Completion Modal */}
+      {activeModalSurvey && (() => {
+        const modalSurvey = surveys.find(s => s.id === activeModalSurvey);
+        const isOwnSurvey = modalSurvey?.user_id === user?.id;
+        
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Completed the survey?</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closeModal}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                Mark the survey as complete once you&apos;ve finished filling it out.
+              </p>
+              
+              {isOwnSurvey && (
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    This is your own survey.
+                  </p>
+                </div>
+              )}
+              
+              {timeRemaining > 0 && !isOwnSurvey && (
+                <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    Please wait {timeRemaining} seconds before marking as complete.
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={closeModal}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleCompleteSurvey(activeModalSurvey);
+                    closeModal();
+                  }}
+                  disabled={timeRemaining > 0 || completingId === activeModalSurvey || isOwnSurvey}
+                  className="flex-1"
+                >
+                  {completingId === activeModalSurvey ? 'Marking...' : 'Mark Complete'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
