@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge as BadgeComponent } from '@/components/ui/badge';
 import { Trophy, Medal, Award, Crown, Star } from 'lucide-react';
+import Link from 'next/link';
 
 interface LeaderboardClientProps {
   user: any;
@@ -17,6 +18,8 @@ export default function LeaderboardClient({
   leaderboard, 
   badges 
 }: LeaderboardClientProps) {
+  // Show login prompt for logged-out users at the top, but still show leaderboard
+  const showLoginPrompt = !user;
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -40,6 +43,27 @@ export default function LeaderboardClient({
 
   return (
     <div className="min-h-full bg-background">
+      {/* Login Prompt for logged-out users */}
+      {showLoginPrompt && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                  Sign in to compete
+                </h2>
+                <p className="text-sm text-blue-700 dark:text-blue-200">
+                  You can view the leaderboard, but you&apos;ll need to sign in to participate and earn your place.
+                </p>
+              </div>
+              <Link href="/auth/login">
+                <Button>Sign In</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -49,7 +73,10 @@ export default function LeaderboardClient({
               Leaderboard
             </h1>
             <p className="text-muted-foreground mt-1">
-              See who&apos;s leading in survey participation and earn recognition for your contributions
+              {user 
+                ? "See who's leading in survey participation and earn recognition for your contributions"
+                : "See who's leading in survey participation - sign in to join the competition"
+              }
             </p>
           </div>
         </div>

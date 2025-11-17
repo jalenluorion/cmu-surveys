@@ -125,22 +125,32 @@ export default function SurveysClient({
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Please sign in</h1>
-          <p className="text-muted-foreground">You need to be signed in to view and complete surveys.</p>
-          <Link href="/">
-            <Button>Go Home</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Show login prompt for logged-out users at the top, but still show surveys
+  const showLoginPrompt = !user;
 
   return (
     <div className="min-h-full bg-background">
+      {/* Login Prompt for logged-out users */}
+      {showLoginPrompt && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                  Sign in to participate
+                </h2>
+                <p className="text-sm text-blue-700 dark:text-blue-200">
+                  You can browse surveys, but you&apos;ll need to sign in to take them and post your own.
+                </p>
+              </div>
+              <Link href="/auth/login">
+                <Button>Sign In</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -148,21 +158,26 @@ export default function SurveysClient({
             <div>
               <h1 className="text-3xl font-bold">Survey Feed</h1>
               <p className="text-muted-foreground mt-1">
-                Complete surveys to earn points and unlock posting privileges
+                {user 
+                  ? "Complete surveys to earn points and unlock posting privileges"
+                  : "Browse available surveys - sign in to participate"
+                }
               </p>
             </div>
-            <div className="text-right">
-              <div className="text-sm text-muted-foreground">Your Progress</div>
-              <div className="text-2xl font-bold">
-                {surveyUser?.surveys_completed || 0}/6
+            {user && (
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">Your Progress</div>
+                <div className="text-2xl font-bold">
+                  {surveyUser?.surveys_completed || 0}/6
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {canPost
+                    ? 'Can post surveys!' 
+                    : `${6 - (surveyUser?.surveys_completed || 0)} more to unlock posting`
+                  }
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">
-                {canPost
-                  ? 'Can post surveys!' 
-                  : `${6 - (surveyUser?.surveys_completed || 0)} more to unlock posting`
-                }
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -179,7 +194,7 @@ export default function SurveysClient({
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
-            {canPost && (
+            {user && canPost && (
               <Link href="/surveys/create">
                 <Button>Post Your Survey</Button>
               </Link>
@@ -254,37 +269,62 @@ export default function SurveysClient({
                   </CardContent>
                   
                   <CardFooter className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleTakeSurveyClick(survey.id, survey.external_url)}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Take Survey
-                    </Button>
-                    
-                    {!isCompleted && !isOwnSurvey && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleCompleteSurvey(survey.id)}
-                        disabled={isCompleting}
-                        className="flex-1"
-                      >
-                        {isCompleting ? 'Marking...' : 'Mark Complete'}
-                      </Button>
-                    )}
-                    
-                    {isCompleted && (
-                      <Button size="sm" disabled className="flex-1">
-                        Completed ✓
-                      </Button>
-                    )}
-                    
-                    {isOwnSurvey && (
-                      <Button size="sm" disabled variant="secondary" className="flex-1">
-                        Your Survey
-                      </Button>
+                    {user ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleTakeSurveyClick(survey.id, survey.external_url)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Take Survey
+                        </Button>
+                        
+                        {!isCompleted && !isOwnSurvey && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleCompleteSurvey(survey.id)}
+                            disabled={isCompleting}
+                            className="flex-1"
+                          >
+                            {isCompleting ? 'Marking...' : 'Mark Complete'}
+                          </Button>
+                        )}
+                        
+                        {isCompleted && (
+                          <Button size="sm" disabled className="flex-1">
+                            Completed ✓
+                          </Button>
+                        )}
+                        
+                        {isOwnSurvey && (
+                          <Button size="sm" disabled variant="secondary" className="flex-1">
+                            Your Survey
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          disabled
+                          title="Sign in to take surveys"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Take Survey
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled
+                          className="flex-1"
+                          title="Sign in to mark surveys complete"
+                        >
+                          Mark Complete
+                        </Button>
+                      </>
                     )}
                   </CardFooter>
                 </Card>
