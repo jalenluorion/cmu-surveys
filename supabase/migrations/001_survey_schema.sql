@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS SURVEY_users (
   surveys_completed INTEGER DEFAULT 0,
   surveys_posted INTEGER DEFAULT 0,
   weekly_surveys_completed INTEGER DEFAULT 0,
-  total_points INTEGER DEFAULT 0,
   badges TEXT[] DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -28,7 +27,6 @@ CREATE TABLE IF NOT EXISTS SURVEY_surveys (
   external_url TEXT NOT NULL,
   estimated_time_minutes INTEGER NOT NULL,
   response_count INTEGER DEFAULT 0,
-  target_responses INTEGER DEFAULT 50,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -148,7 +146,6 @@ BEGIN
   SET 
     surveys_completed = surveys_completed + 1,
     weekly_surveys_completed = weekly_surveys_completed + 1,
-    total_points = total_points + 10,
     updated_at = NOW()
   WHERE id = NEW.user_id;
   

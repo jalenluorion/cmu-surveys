@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Home() {
+export default async function Home() {
   return (
     <main className="min-h-full flex flex-col">
 
@@ -9,11 +9,10 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Fair Survey Distribution
-              <span className="block text-primary">for CMU Students</span>
+              CMU FYW Survey Hub
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Complete 10 surveys to unlock posting privileges. Help fellow students while ensuring everyone gets the responses they need.
+              Complete 10 surveys in exchange for posting your own.
             </p>
           </div>
 

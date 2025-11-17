@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Survey, SurveyUser } from '@/lib/types';
-import { completeSurvey } from '@/lib/supabase/queries';
+import { completeSurvey, getPlatformStats } from '@/lib/supabase/queries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,25 @@ export default function SurveysClient({
   const router = useRouter();
   const [completedSurveys, setCompletedSurveys] = useState<Set<string>>(new Set(completedSurveyIds));
   const [completingId, setCompletingId] = useState<string | null>(null);
+  const [totalSurveys, setTotalSurveys] = useState<number>(0);
+
+  // Check platform stats on component mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await getPlatformStats();
+        setTotalSurveys(stats.totalSurveys);
+      } catch (error) {
+        console.error('Error fetching platform stats:', error);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // Determine if user can post based on survey count or completion requirement
+  const canPostDueToLowSurveyCount = totalSurveys < 11;
+  const canPostDueToCompletions = (surveyUser?.surveys_completed || 0) >= 10;
+  const canPost = canPostDueToLowSurveyCount || canPostDueToCompletions;
 
   const handleCompleteSurvey = async (surveyId: string) => {
     if (!user) return;
@@ -76,7 +95,7 @@ export default function SurveysClient({
                 {surveyUser?.surveys_completed || 0}/10
               </div>
               <div className="text-sm text-muted-foreground">
-                {(surveyUser?.surveys_completed || 0) >= 10 
+                {canPost
                   ? 'Can post surveys!' 
                   : `${10 - (surveyUser?.surveys_completed || 0)} more to unlock posting`
                 }
@@ -98,7 +117,7 @@ export default function SurveysClient({
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
-            {(surveyUser?.surveys_completed || 0) >= 10 && (
+            {canPost && (
               <Link href="/surveys/create">
                 <Button>Post Your Survey</Button>
               </Link>

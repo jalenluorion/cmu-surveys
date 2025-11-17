@@ -48,7 +48,7 @@ export default function ProfileClient({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-2">
@@ -68,18 +68,6 @@ export default function ProfileClient({
                 <div>
                   <div className="text-2xl font-bold">{surveyUser?.surveys_posted || 0}</div>
                   <div className="text-sm text-muted-foreground">Surveys Posted</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                <div>
-                  <div className="text-2xl font-bold">{surveyUser?.total_points || 0}</div>
-                  <div className="text-sm text-muted-foreground">Total Points</div>
                 </div>
               </div>
             </CardContent>

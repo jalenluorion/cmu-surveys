@@ -1,27 +1,22 @@
 'use client';
 
-import { useState } from 'react';
 import { LeaderboardEntry, Badge } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge as BadgeComponent } from '@/components/ui/badge';
-import { Trophy, Medal, Award, Crown, Star, TrendingUp, Calendar } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Trophy, Medal, Award, Crown, Star } from 'lucide-react';
 
 interface LeaderboardClientProps {
   user: any;
-  weeklyLeaderboard: LeaderboardEntry[];
-  alltimeLeaderboard: LeaderboardEntry[];
+  leaderboard: LeaderboardEntry[];
   badges: Badge[];
 }
 
 export default function LeaderboardClient({ 
   user, 
-  weeklyLeaderboard, 
-  alltimeLeaderboard, 
+  leaderboard, 
   badges 
 }: LeaderboardClientProps) {
-  const [activeTab, setActiveTab] = useState('weekly');
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -36,13 +31,12 @@ export default function LeaderboardClient({
     }
   };
 
-  const getUserRank = (leaderboard: LeaderboardEntry[]) => {
+  const getUserRank = () => {
     if (!user) return null;
     return leaderboard.find(entry => entry.user_id === user.id);
   };
 
-  const currentLeaderboard = activeTab === 'weekly' ? weeklyLeaderboard : alltimeLeaderboard;
-  const userRank = getUserRank(currentLeaderboard);
+  const userRank = getUserRank();
 
   return (
     <div className="min-h-full bg-background">
@@ -80,65 +74,31 @@ export default function LeaderboardClient({
                   <div>
                     <div className="font-semibold">Rank #{userRank.rank}</div>
                     <div className="text-sm text-muted-foreground">
-                      {activeTab === 'weekly' 
-                        ? `${userRank.weekly_surveys_completed} surveys this week`
-                        : `${userRank.surveys_completed} surveys total`
-                      }
+                      {userRank.surveys_completed} surveys completed
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold">{userRank.total_points}</div>
-                  <div className="text-sm text-muted-foreground">Total Points</div>
+                  <div className="text-2xl font-bold">{userRank.surveys_completed}</div>
+                  <div className="text-sm text-muted-foreground">Total Surveys</div>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Leaderboard Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="weekly" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Weekly
-              </TabsTrigger>
-              <TabsTrigger value="alltime" className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                All Time
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="weekly">
-            <Card>
-              <CardHeader>
-                <CardTitle>Weekly Leaderboard</CardTitle>
-                <CardDescription>
-                  Rankings reset every Sunday at midnight. Complete more surveys to climb the ranks!
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <LeaderboardTable entries={weeklyLeaderboard} type="weekly" />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="alltime">
-            <Card>
-              <CardHeader>
-                <CardTitle>All-Time Leaderboard</CardTitle>
-                <CardDescription>
-                  Total survey completions since joining the platform
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <LeaderboardTable entries={alltimeLeaderboard} type="alltime" />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Leaderboard */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Leaderboard</CardTitle>
+            <CardDescription>
+              The top contributors to the CMU survey exchange community.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LeaderboardTable entries={leaderboard} />
+          </CardContent>
+        </Card>
 
         {/* Badge Showcase */}
         <Card className="mt-8">
@@ -168,7 +128,7 @@ export default function LeaderboardClient({
   );
 }
 
-function LeaderboardTable({ entries, type }: { entries: LeaderboardEntry[], type: 'weekly' | 'alltime' }) {
+function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -210,10 +170,7 @@ function LeaderboardTable({ entries, type }: { entries: LeaderboardEntry[], type
                 {entry.full_name || entry.email.split('@')[0]}
               </div>
               <div className="text-sm text-muted-foreground">
-                {type === 'weekly' 
-                  ? `${entry.weekly_surveys_completed} surveys this week`
-                  : `${entry.surveys_completed} surveys total`
-                }
+                {entry.surveys_completed} surveys completed
               </div>
             </div>
           </div>
@@ -233,10 +190,10 @@ function LeaderboardTable({ entries, type }: { entries: LeaderboardEntry[], type
               )}
             </div>
             
-            {/* Points */}
+            {/* Surveys */}
             <div className="text-right">
-              <div className="font-bold">{entry.total_points}</div>
-              <div className="text-xs text-muted-foreground">points</div>
+              <div className="font-bold">{entry.surveys_completed}</div>
+              <div className="text-xs text-muted-foreground">surveys</div>
             </div>
           </div>
         </div>

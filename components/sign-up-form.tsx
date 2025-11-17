@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { createOrUpdateUser } from "@/lib/supabase/queries";
 
 export function SignUpForm({
   className,
@@ -33,6 +34,13 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
+    // Validate CMU email
+    if (!email.endsWith("@andrew.cmu.edu")) {
+      setError("Only CMU email addresses (@andrew.cmu.edu) are allowed");
+      setIsLoading(false);
+      return;
+    }
+
     if (password !== repeatPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
@@ -44,11 +52,30 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/surveys`,
         },
       });
       if (error) throw error;
-      router.push("/auth/sign-up-success");
+      
+      // Automatically sign in the user after successful registration
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInError) throw signInError;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+        
+      // Create or update user profile if authenticated
+      if (user) {
+        await createOrUpdateUser(
+          user.id,
+          user.email || '',
+          user.user_metadata?.full_name
+        );
+      }
+        
+      router.push("/surveys");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -71,7 +98,7 @@ export function SignUpForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="andrewid@andrew.cmu.edu"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

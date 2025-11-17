@@ -123,9 +123,9 @@ export async function getServerUserCompletedSurveyIds(userId: string): Promise<s
 }
 
 // Leaderboard
-export async function getServerLeaderboard(type: 'weekly' | 'alltime' = 'weekly', limit = 50): Promise<LeaderboardEntry[]> {
+export async function getServerLeaderboard(limit = 50): Promise<LeaderboardEntry[]> {
   const supabase = await createClient();
-  const orderColumn = type === 'weekly' ? 'weekly_surveys_completed' : 'surveys_completed';
+  const orderColumn = 'surveys_completed';
   
   const { data, error } = await supabase
     .from('survey_users')
@@ -134,8 +134,6 @@ export async function getServerLeaderboard(type: 'weekly' | 'alltime' = 'weekly'
       email,
       full_name,
       surveys_completed,
-      weekly_surveys_completed,
-      total_points,
       survey_user_badges(
         id,
         earned_at,
@@ -155,8 +153,6 @@ export async function getServerLeaderboard(type: 'weekly' | 'alltime' = 'weekly'
     full_name: user.full_name,
     email: user.email,
     surveys_completed: user.surveys_completed,
-    weekly_surveys_completed: user.weekly_surveys_completed,
-    total_points: user.total_points,
     badges: user.survey_user_badges || [],
     rank: index + 1,
   }));

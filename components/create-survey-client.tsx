@@ -1,36 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSurvey } from '@/lib/supabase/queries';
+import { createSurvey, getPlatformStats } from '@/lib/supabase/queries';
 import { CreateSurveyData, SurveyUser } from '@/lib/types';
+import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, CheckCircle, ArrowLeft, Rocket } from 'lucide-react';
 import Link from 'next/link';
 
 interface CreateSurveyClientProps {
-  user: any;
+  user: User;
   surveyUser: SurveyUser;
 }
 
-export default function CreateSurveyClient({ user, surveyUser }: CreateSurveyClientProps) {
+function CreateSurveyClient({ user, surveyUser }: CreateSurveyClientProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<CreateSurveyData>({
     title: '',
     description: '',
     external_url: '',
     estimated_time_minutes: 5,
-    target_responses: 50,
     existing_response_count: 0,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [totalSurveys, setTotalSurveys] = useState<number>(0);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
-  const canPost = (surveyUser?.surveys_completed || 0) >= 10;
+  // Check platform stats on component mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await getPlatformStats();
+        setTotalSurveys(stats.totalSurveys);
+      } catch (error) {
+        console.error('Error fetching platform stats:', error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // Determine if user can post based on survey count or completion requirement
+  const canPostDueToLowSurveyCount = totalSurveys < 11;
+  const canPostDueToCompletions = (surveyUser?.surveys_completed || 0) >= 10;
+  const canPost = canPostDueToLowSurveyCount || canPostDueToCompletions;
   const remainingSurveys = Math.max(0, 10 - (surveyUser?.surveys_completed || 0));
 
   const validateForm = (): boolean => {
@@ -58,9 +78,6 @@ export default function CreateSurveyClient({ user, surveyUser }: CreateSurveyCli
       newErrors.estimated_time_minutes = 'Time must be between 1 and 60 minutes';
     }
 
-    if (formData.target_responses && (formData.target_responses < 1 || formData.target_responses > 500)) {
-      newErrors.target_responses = 'Target responses must be between 1 and 500';
-    }
 
     if (formData.existing_response_count && formData.existing_response_count < 0) {
       newErrors.existing_response_count = 'Existing responses cannot be negative';
@@ -150,7 +167,23 @@ export default function CreateSurveyClient({ user, surveyUser }: CreateSurveyCli
           </Card>
         )}
 
-        {canPost && (
+        {canPostDueToLowSurveyCount && !canPostDueToCompletions && (
+          <Card className="mb-8 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+            <CardHeader>
+              <div className="flex items-center space-x-2">
+                <Rocket className="h-5 w-5 text-blue-600" />
+                <CardTitle className="text-blue-800 dark:text-blue-200">
+                  Early Access - Help Build the Platform!
+                </CardTitle>
+              </div>
+              <CardDescription className="text-blue-700 dark:text-blue-300">
+                Since there are only {totalSurveys} surveys on the platform, we&apos;re allowing all users to post surveys to help build our community.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
+        {canPostDueToCompletions && (
           <Card className="mb-8 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
             <CardHeader>
               <div className="flex items-center space-x-2">
@@ -230,7 +263,7 @@ export default function CreateSurveyClient({ user, surveyUser }: CreateSurveyCli
               </div>
 
               {/* Time and Response Settings */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="estimated_time">Estimated Time (minutes) *</Label>
                   <Input
@@ -245,23 +278,6 @@ export default function CreateSurveyClient({ user, surveyUser }: CreateSurveyCli
                   />
                   {errors.estimated_time_minutes && (
                     <p className="text-sm text-red-500">{errors.estimated_time_minutes}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="target_responses">Target Responses</Label>
-                  <Input
-                    id="target_responses"
-                    type="number"
-                    min="1"
-                    max="500"
-                    value={formData.target_responses}
-                    onChange={(e) => handleInputChange('target_responses', parseInt(e.target.value) || 0)}
-                    disabled={!canPost}
-                    className={errors.target_responses ? 'border-red-500' : ''}
-                  />
-                  {errors.target_responses && (
-                    <p className="text-sm text-red-500">{errors.target_responses}</p>
                   )}
                 </div>
 
@@ -313,3 +329,5 @@ export default function CreateSurveyClient({ user, surveyUser }: CreateSurveyCli
     </div>
   );
 }
+
+export default CreateSurveyClient;

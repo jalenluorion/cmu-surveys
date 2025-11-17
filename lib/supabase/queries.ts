@@ -62,10 +62,23 @@ export async function getSurveys(limit = 20, offset = 0): Promise<Survey[]> {
 }
 
 export async function createSurvey(userId: string, surveyData: CreateSurveyData): Promise<Survey | null> {
-  // Check if user has completed enough surveys
+  // Get platform stats to check total survey count
+  const stats = await getPlatformStats();
+  
+  // Get user profile for later use
   const userProfile = await getUserProfile(userId);
-  if (!userProfile || userProfile.surveys_completed < 10) {
-    throw new Error('You must complete 10 surveys before posting your own');
+  if (!userProfile) {
+    throw new Error('User profile not found');
+  }
+  
+  // If there are fewer than 11 surveys, bypass the requirement
+  if (stats.totalSurveys < 11) {
+    // Allow posting without checking surveys_completed
+  } else {
+    // Check if user has completed enough surveys (normal requirement)
+    if (userProfile.surveys_completed < 10) {
+      throw new Error('You must complete 10 surveys before posting your own');
+    }
   }
 
   const { data, error } = await supabase
@@ -76,7 +89,6 @@ export async function createSurvey(userId: string, surveyData: CreateSurveyData)
       description: surveyData.description,
       external_url: surveyData.external_url,
       estimated_time_minutes: surveyData.estimated_time_minutes,
-      target_responses: surveyData.target_responses || 50,
       response_count: surveyData.existing_response_count || 0,
     })
     .select()
@@ -184,8 +196,8 @@ export async function hasUserCompletedSurvey(userId: string, surveyId: string): 
 }
 
 // Leaderboard
-export async function getLeaderboard(type: 'weekly' | 'alltime' = 'weekly', limit = 50): Promise<LeaderboardEntry[]> {
-  const orderColumn = type === 'weekly' ? 'weekly_surveys_completed' : 'surveys_completed';
+export async function getLeaderboard(limit = 50): Promise<LeaderboardEntry[]> {
+  const orderColumn = 'surveys_completed';
   
   const { data, error } = await supabase
     .from('survey_users')
@@ -194,8 +206,6 @@ export async function getLeaderboard(type: 'weekly' | 'alltime' = 'weekly', limi
       email,
       full_name,
       surveys_completed,
-      weekly_surveys_completed,
-      total_points,
       survey_user_badges(
         id,
         earned_at,
@@ -215,8 +225,6 @@ export async function getLeaderboard(type: 'weekly' | 'alltime' = 'weekly', limi
     full_name: user.full_name,
     email: user.email,
     surveys_completed: user.surveys_completed,
-    weekly_surveys_completed: user.weekly_surveys_completed,
-    total_points: user.total_points,
     badges: user.survey_user_badges || [],
     rank: index + 1,
   }));
