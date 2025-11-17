@@ -30,6 +30,7 @@ export default function SurveysClient({
   const [surveyClickTimes, setSurveyClickTimes] = useState<Map<string, number>>(new Map());
   const [activeModalSurvey, setActiveModalSurvey] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
 
   // Check platform stats on component mount
   useEffect(() => {
@@ -71,6 +72,18 @@ export default function SurveysClient({
   const closeModal = () => {
     setActiveModalSurvey(null);
     setTimeRemaining(0);
+  };
+
+  const toggleDescription = (surveyId: string) => {
+    setExpandedDescriptions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(surveyId)) {
+        newSet.delete(surveyId);
+      } else {
+        newSet.add(surveyId);
+      }
+      return newSet;
+    });
   };
 
   const handleCompleteSurvey = async (surveyId: string) => {
@@ -204,7 +217,13 @@ export default function SurveysClient({
                         <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 ml-2" />
                       )}
                     </div>
-                    <CardDescription className="line-clamp-3">
+                    <CardDescription 
+                      className={`cursor-pointer transition-all duration-200 hover:text-foreground ${
+                        expandedDescriptions.has(survey.id) ? '' : 'line-clamp-3'
+                      }`}
+                      onClick={() => toggleDescription(survey.id)}
+                      title="Click to expand/collapse"
+                    >
                       {survey.description}
                     </CardDescription>
                   </CardHeader>
