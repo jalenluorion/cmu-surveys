@@ -27,6 +27,7 @@ export default function SurveysClient({
   const [completedSurveys, setCompletedSurveys] = useState<Set<string>>(new Set(completedSurveyIds));
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [totalSurveys, setTotalSurveys] = useState<number>(0);
+  const [surveyClickTimes, setSurveyClickTimes] = useState<Map<string, number>>(new Map());
 
   // Check platform stats on component mount
   useEffect(() => {
@@ -46,13 +47,39 @@ export default function SurveysClient({
   const canPostDueToCompletions = (surveyUser?.surveys_completed || 0) >= 10;
   const canPost = canPostDueToLowSurveyCount || canPostDueToCompletions;
 
+  const handleTakeSurveyClick = (surveyId: string) => {
+    setSurveyClickTimes(prev => new Map(prev.set(surveyId, Date.now())));
+  };
+
   const handleCompleteSurvey = async (surveyId: string) => {
     if (!user) return;
+    
+    // Check if user clicked "Take Survey" and if 1 minute has passed
+    const clickTime = surveyClickTimes.get(surveyId);
+    if (!clickTime) {
+      alert('Please click "Take Survey" first before marking as complete.');
+      return;
+    }
+    
+    const timeElapsed = Date.now() - clickTime;
+    const oneMinuteInMs = 60 * 1000;
+    
+    if (timeElapsed < oneMinuteInMs) {
+      const remainingSeconds = Math.ceil((oneMinuteInMs - timeElapsed) / 1000);
+      alert(`Please wait ${remainingSeconds} more seconds before marking as complete.`);
+      return;
+    }
     
     setCompletingId(surveyId);
     try {
       await completeSurvey(user.id, surveyId);
       setCompletedSurveys(prev => new Set([...prev, surveyId]));
+      // Remove the click time since survey is now completed
+      setSurveyClickTimes(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(surveyId);
+        return newMap;
+      });
       // Refresh the page to update response counts and user progress
       router.refresh();
     } catch (error) {
@@ -191,6 +218,7 @@ export default function SurveysClient({
                       variant="outline"
                       size="sm"
                       className="flex-1"
+                      onClick={() => handleTakeSurveyClick(survey.id)}
                     >
                       <a
                         href={survey.external_url}
